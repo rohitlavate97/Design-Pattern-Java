@@ -1,0 +1,49 @@
+Design Pattern:
+--------------
+-Selection of Design pattern
+-Solution to Design problem using Design pattern
+
+Types of Design Pattern:
+-----------------------
+--Creational Patterns: Singleton
+                       AbstractFactory
+					   Builder
+					   Factory Method
+					   Prototype
+--Structural Patterns: Adapter
+                       Bridge
+					   Composite
+					   Decorator
+					   Facade
+					   Flyweight
+					   Proxy
+--Behavioral Patterns: Chain of Responsibility
+                       Command
+					   Interpreter
+					   Iterator
+					   Mediator
+					   Memento
+					   Observer
+					   State
+					   Strategy
+					   Template method
+					   
+-MicroServices Design Pattern--> API Gateway
+                                 Saga Pattern
+								 Database per Service
+								 Distribute tracing
+								 Circuit Breaker
+								 Service Discovery pattern
+								 
+-SOLID Design Principle Overview
+--------------------------------
+S --> Single Responsibility
+O --> Open Closed Principle
+L --> Liskov substitution
+I --> Interface Segregation
+D --> Dependency Injection
+
+--Singleton Design Pattern:
+--------------------------
+Create a Java Project--> Name-->01-SingleTonDP
+                         JRE--->
