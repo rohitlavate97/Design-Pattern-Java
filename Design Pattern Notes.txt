@@ -42,8 +42,416 @@ O --> Open Closed Principle
 L --> Liskov substitution
 I --> Interface Segregation
 D --> Dependency Injection
-
+--------------------------
 --Singleton Design Pattern:
 --------------------------
 Create a Java Project--> Name-->01-SingleTonDP
-                         JRE--->
+                         JRE--->JavaSE-1.8
+						 
+--'new' keyword makes sure that it creates new object so hashcode is different
+--Singleton can be created in 
+     1. Eager Initialization Singleton: Since object is static variable in SingletonDesignPattern class, it initialized during class loading, it is not even waiting to call
+	                                    the getInstance() -->Object created at class loading time itself, whether you are using or not, it occupy memory
+										this is EAGER initialization
+	 2. Lazy Initialization Singleton
+	    public class SingletonDesignPattern {
+
+        private static SingletonDesignPattern instance;
+
+        private SingletonDesignPattern() {
+        }
+
+        public static SingletonDesignPattern getInstance() {
+          if (instance == null) {
+             instance = new SingletonDesignPattern();
+          }
+          return instance;
+        }
+     }
+
+	 3. Thread-Safe Singleton using synchronized
+	  public static synchronized SingletonDesignPattern getInstance() {
+        if (instance == null) {                                         //if we directly return new SingletonDesignPattern(); --> it will create new object everytime, so violation
+            instance = new SingletonDesignPattern();
+        }
+        return instance;
+    }
+	
+	 4. Bill Pugh Singleton (Recommended)
+	 
+public class SingletonDesignPattern {             //✅ The Bill Pugh method is widely considered the best practice for Singleton in Java. 
+
+    private SingletonDesignPattern() {
+    }
+
+    // Inner static helper class
+    private static class SingletonHelper {
+        private static final SingletonDesignPattern INSTANCE = new SingletonDesignPattern();
+    }
+
+    public static SingletonDesignPattern getInstance() {
+        return SingletonHelper.INSTANCE;
+    }
+}
+
+--Where we can use Singleton--->DB Connection ---> DBConnection.getInstance();
+                            --->If we want the data from properties file-->getProperties.getInstance();   //getInstance() means, we are creating singleton class
+							--->For providing utility-->e.g To notify i.e notification after delivery,shipping, cancellation order etc
+							--->For logger
+			In Java------------>Runtime class follows singleton design pattern-->java.lang
+			                    Runtime r = new Runtime();   //error as Runtime() is private constructor
+								Runtime r = Runtime.getInstance()   //Works
+                        ------->Calender class
+						
+WHY Singleton for Notification / Email / SMS Services?
+✅ 1. These services do NOT maintain any user-specific state
+A notification service is stateless.
+Example: Every time you call sendEmail(), it just sends mail.
+It doesn't store user data inside the object.
+So, one object is enough → Why create many?
+✅ 2. External resources (SMTP, SMS gateway, notification API) must be reused
+Example:When sending emails, you usually connect to:
+      SMTP server
+      REST API client
+      Third-party gateway
+Opening multiple connections is expensive.
+Using Singleton means:
+      One SMTP connection reused
+      One HTTP client reused
+      Zero repeated heavy initialization
+						
+⭐ WHY this is good?
+1️⃣ Only one object is created
+Avoids multiple objects doing same thing.
+2️⃣ Heavy resources (SMTP client, HTTP client) are created only once
+Better performance.
+3️⃣ All notifications pass through the same service
+Makes logging, retry logic, and monitoring easier.
+4️⃣ Reduces bugs
+No duplication of configuration or connection issues.
+						
+Note: Serialization belongs to Object. Static value is not serialized, even if you modify the value whatever is their at loading time that will be displayed
+
+App:
+----
+public class SingletonDesignPattern {
+
+    // instance is created at the time of class loading
+    static SingletonDesignPattern instance = new SingletonDesignPattern();
+
+    // private constructor to prevent instantiation
+    private SingletonDesignPattern() {
+    }
+
+    // public method to provide access to the instance
+    public static SingletonDesignPattern getInstance() {
+        return instance;                        //from static method only static variable can be accessed
+    }
+
+    // example method
+    public void showMessage() {
+        System.out.println("Hello from Singleton!");
+    }
+}
+
+
+public class Test {
+	public static void main(String[] args) {
+		NonSingleton ns1 = new NonSingleton();
+		NonSingleton ns2 = new NonSingleton();
+		System.out.println(ns1.hashCode());
+		System.out.println(ns2.hashCode());
+		
+		SingletonDesignPattern s1 = SingletonDesignPattern.getInstance();
+		SingletonDesignPattern s2 = SingletonDesignPattern.getInstance();
+		System.out.println(s1.hashCode());
+		System.out.println(s2.hashCode());
+	}
+}
+
+
+-We can violate the Singleton with some mechanism
+   Reflection --> We can call private constructor
+   Cloning
+   Serialization
+   Multi-threading
+   
+   
+--Serialization:
+----------------
+public class Singleton implements Serializable{
+	static Singleton instance = null;
+	
+	String name = "karthik";
+	
+	private Singleton() {
+		
+	}
+	
+	public static Singleton getInstance() {
+		if(instance == null) {
+			instance = new Singleton();
+		}
+		return instance;
+	}
+}
+
+
+public class TestForSerialization {
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
+		//Serialization
+		String filePath = "C:\\data\\Projects\\Design Pattern\\serializableDoc.txt";
+		Singleton s = Singleton.getInstance();
+		
+		FileOutputStream f = new FileOutputStream(filePath);
+		ObjectOutputStream obj = new ObjectOutputStream(f);
+		obj.writeObject(s);
+		//Deserialization
+		FileInputStream fi = new FileInputStream(filePath);
+		ObjectInputStream in = new ObjectInputStream(fi);
+		Singleton s1 = (Singleton)in.readObject();
+		System.out.println(s1.name);              //karthik
+		System.out.println(s1.hashCode());        //2058534881
+		
+		System.out.println(s.hashCode());         //1267032364
+	}
+}
+
+--So using serialization, we can create multiple object for Singleton design pattern class ie breaking Singleton pattern
+Solution : Whenever readObject() getting called --> internally it calls readResolve(), which is responsible for creating new object, so we will override readResolve()
+--------
+public class Singleton implements Serializable{
+	static Singleton instance = null;
+	
+	String name = "karthik";
+	
+	private Singleton() {
+		
+	}
+	
+	public static Singleton getInstance() {
+		if(instance == null) {
+			instance = new Singleton();
+		}
+		return instance;
+	}
+	Object readResolve(){
+		return instance;
+	}
+}
+now check the hashcode
+
+
+--MultiTheading: Thread is nothing but independent path of execution within a program
+---------------
+public class TestForMultiThreads extends Thread {
+
+    @Override
+    public void run() {
+        Singleton s = Singleton.getInstance();
+        System.out.println(Thread.currentThread().getName() 
+                + " => " + s.hashCode());
+    }
+
+    public static void main(String[] args) {
+        TestForMultiThreads t1 = new TestForMultiThreads();
+        TestForMultiThreads t2 = new TestForMultiThreads();
+
+        t1.setName("Thread_1");
+        t2.setName("Thread_2");
+
+        t1.start();                    //In both cases (s==null) satisfies, so both will access to new object
+        t2.start();
+    }
+}
+
+Solution:
+---------
+ public static synchronized SingletonDesignPattern getInstance() {
+        if (instance == null) {                                         
+            instance = new SingletonDesignPattern();
+        }
+        return instance;  
+    }
+	--> After using synchronized method, it will acquire the lock(Class lock the static method)
+	    If we try with Thread2---> It will go into stepping mode, ie waiting for loc to be released
+		Once the thread1 access Synchronized method lock released and Thread2 will access it and value of s is not null
+		
+-If we have 100's of line of code, we can use synchronized block also
+  
+public class Singleton {
+    private static volatile Singleton s;  // volatile is important
+    private Singleton() {}
+    public static Singleton getInstance() {
+        System.out.println("hi");
+        System.out.println("hi");
+        System.out.println("hi");
+        if (s == null) {
+            synchronized (Singleton.class) {
+                if (s == null) {
+                    s = new Singleton();
+                }
+            }
+        }
+        return s;
+    }
+}
+
+--Reflection: Private Constructor can be called using Reflection
+------------
+-From java.lang.Class 
+getDeclaredConstructor() --->Can access private constructor
+getDeclaredFields()      --->can access private fields
+getDeclaredMethods()     --->can access private methods
+eg-->Class<T>.getDeclaredConstructor()
+
+
+
+| Method Type                  | `getDeclaredXxx()`                       | `getXxx()`                                                |
+| ---------------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| Functions                    | Returns **all members inside the class** | Returns **only public members**, including inherited ones |
+| Shows private?               | ✔ Yes                                    | ❌ No                                                      |
+| Includes superclass members? | ❌ No                                     | ✔ Yes (public only)                                       |
+
+public class TestForReflection {
+	public static void main(String[] args) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+		Singleton s1 = Singleton.getInstance();
+		System.out.println(s1.hashCode());                                                       //1159190947
+		
+		Constructor<Singleton> declaredConstructor = Singleton.class.getDeclaredConstructor();
+		declaredConstructor.setAccessible(true);
+		Singleton s2 = declaredConstructor.newInstance();
+		System.out.println(s2.hashCode());                                                      //1421795058
+	}
+}
+
+--Solution:
+public class Singleton {
+
+    private static Singleton instance;
+    private static boolean instanceCreated = false;
+
+    private Singleton() {
+        if (instanceCreated) {
+            throw new RuntimeException("Reflection is not allowed!");          //Throwing exception as we can't return anything from constructor
+        }
+        instanceCreated = true;
+    }
+
+    public static Singleton getInstance() {
+        if (instance == null) {
+            synchronized (Singleton.class) {
+                if (instance == null) {
+                    instance = new Singleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+
+same code can be written as 
+
+private Singleton{
+   if(s!=null){                                                  //When already object present, then and we trying to access constructor with Reflection-->Exception
+    throw new Exception();
+	}
+}
+
+--Cloning -->
+---------
+If you want your Singleton to be 100% safe, you must also protect it from Cloning — because cloning can also break Singleton just like Reflection.
+If your Singleton implements Cloneable, cloning creates a new object, breaking the rule of “only one instance”.
+Example:
+
+Singleton s1 = Singleton.getInstance();
+Singleton s2 = (Singleton) s1.clone();               //Different object, different memory-->If we change values for object, it will not reflect in cloned object
+System.out.println(s1 == s2); // false ❗ (Singleton broken)
+
+-Shallow cloning--> If you modify original object, cloned object will have modified object.
+-Deep Cloning--> If you modify original object, when we have object reference, it will not reflect in cloned object ie it will use seperate memory.
+                 For this,we have to override in the clone()
+
+| Feature          | Shallow Cloning                 | Deep Cloning                        |
+| ---------------- | ------------------------------- | ----------------------------------- |
+| Primitive fields | Copied                          | Copied                              |
+| Object fields    | Same reference (shared)         | New independent object              |
+| Speed            | Faster                          | Slower                              |
+| When to use      | Immutable or simple objects     | Complex objects with nested objects |
+| Risk             | Side effects due shared objects | Safe, no shared state               |
+
+🧠 Interview Tip
+
+Java’s default clone (super.clone()) always performs SHALLOW COPY.
+If you want deep copy, you must manually clone nested objects.
+
+
+public class Singleton implements Cloneable {
+	static Singleton instance = null;
+
+	private Singleton() {
+
+	}
+
+	public static Singleton getInstance() {
+		if (instance == null) {
+			instance = new Singleton();
+		}
+		return instance;
+	}
+
+	
+	  @Override 
+	  protected Object clone() { //method present in object class, so if we directly call in test class it is protected //actually it returns super.clone(); 
+	         return instance;   //return same object
+	  }
+	 
+}
+
+
+public class TestForCloning {
+	public static void main(String[] args) {
+		Singleton s1 = Singleton.getInstance();
+		System.out.println(s1.hashCode());
+		
+        Singleton s2 = (Singleton)s1.clone();
+		System.out.println(s2.hashCode());
+	}
+	
+}
+
+--Runtime runtime = Runtime.getRuntime();
+System.out.println(runtime.freeMemory());
+🧠 Interview Note
+Yes, Runtime is an example of a Singleton design pattern, but Java exposes the instance using:
+👉 getRuntime()
+--Runtime doesn't impement Serializable,Clonable
+
+--java.util.logging.Logger.getLogger() is slow?. Logger.getLogger() is slower compared to normal object creation because internally it does MANY things:
+
+--Double-Checked Locking Singleton
+public class Singleton {
+
+    private static volatile Singleton instance;
+
+    private Singleton() {}
+
+    public static Singleton getInstance() {
+
+        if (instance == null) {                     // 1st check (no locking)
+            synchronized (Singleton.class) {        // lock
+                if (instance == null) {             // 2nd check (inside lock)
+                    instance = new Singleton();     // create object
+                }
+            }
+        }
+
+        return instance;   // return same instance always
+    }
+}
+🧠 Why DOUBLE check?
+✔ First check
+Prevents unnecessary synchronization.
+Most calls will skip the lock.
+✔ Second check
+Prevents multiple threads from creating multiple instances at the same time.
