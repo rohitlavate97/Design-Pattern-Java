@@ -38,12 +38,12 @@ Types of Design Pattern:
 -SOLID Design Principle Overview
 --------------------------------
 S --> Single Responsibility
-O --> Open Closed Principle
+O --> Open Closed Principle  --> Open for extension, closed for modification 
 L --> Liskov substitution
 I --> Interface Segregation
 D --> Dependency Injection
 --------------------------
---Singleton Design Pattern:
+--1)Singleton Design Pattern:
 --------------------------
 Create a Java Project--> Name-->01-SingleTonDP
                          JRE--->JavaSE-1.8
@@ -455,3 +455,178 @@ Prevents unnecessary synchronization.
 Most calls will skip the lock.
 ✔ Second check
 Prevents multiple threads from creating multiple instances at the same time.
+
+-------------------------
+-2)Factory Design Pattern:
+-------------------------
+-1. “Whenever you want to work with constructor, go for abstract class.”
+✔️ TRUE — but incomplete.
+Interfaces cannot have constructors
+(because they cannot have instance fields)
+Abstract classes can have constructors
+and those constructors run when a subclass object is created.
+👉 Use an abstract class when:
+You need a constructor
+You need non-final fields
+You need to maintain state
+You want to provide common methods, partial implementation, template patterns
+You want non-static variables or methods
+
+-2. “When you want static final values, go for interface.”
+✔️ TRUE — but outdated in wording.
+All fields inside an interface are public static final by default (constants).
+Interfaces are best for constants and behavior contracts.
+👉 Use an interface when:
+You want constants
+You want only method signatures + (Java 8+) default/static methods
+You want multiple inheritance of type
+
+| Feature              | Interface                  | Abstract Class                             |
+| -------------------- | -------------------------- | ------------------------------------------ |
+| Constructor          | ❌ No                       | ✔ Yes                                    |
+| Variables            | Only `public static final` | Any type (`private`, `protected`, mutable)  | 
+| Multiple Inheritance | ✔ Yes                      | ❌ No                                       |
+| Default Methods      | ✔ Yes (Java 8)             | ✔ Yes                                      |
+| Static Methods       | ✔ Yes                      | ✔ Yes                                      |
+| State                | ❌ No                       | ✔ Yes                                      |
+
+--The Factory design pattern says that, define an interface (A Java Interface or an abstract class) and let the subclass decide which object to instantiate. The Factory method in the interface
+lets a class define the instantiation to one or more subclass.
+ -In Factory pattern, we create objects without exposing the creation logic to the client and the client uses the same common interface to create a new type of object.
+ -In factory pattern, we create object withour exposing the creation logic to the client and refer to newly created object using common interface.
+ -A factory pattern or factory method pattern says that just define an interface or abstract class for creating an object but, let the subclasss decide to instantiate
+ -The factory method pattern is also known as virtual constructor.
+ --Real Time use
+ ---------------
+          -getInstance() of java.util.Calender.NumberFormat and ResourceBundle uses factory method design pattern
+		  -Consider and example of using multiple database servers like SQL server and Oracle, if you developing an app using SQL Server db as backend but, in future need to change backend db to oracle,
+		  you will need to modify all your code, if you haven't written your code following factory design pattern
+		  -In factory design pattern, you need to do very littele work to achieve this. A class implementing factory design pattern takes care for you and lessen your burden. Switching from db server won't 
+		  bother you at all. You just need to make some small changes in your configuration file or db connection based on the type of db, then in future there is no need to modify the change whenever db is 
+		  switched
+		  
+App:
+----
+package com.alchemist.dp;
+
+public interface Notification {
+	public void notifi();
+}
+
+
+public class SMSNotification implements Notification{
+
+	@Override
+	public void notifi() {
+		System.out.println("Triggering notification through SMS...");
+	}
+
+}
+
+
+public class EmailNotification implements Notification{
+
+	@Override
+	public void notifi() {
+		System.out.println("Triggering notification through email...");
+		
+	}
+
+}
+
+
+public class Factory {
+	public Notification createNotification(String mode) {
+		if(mode.equalsIgnoreCase("sms")) {
+			Notification n = new SMSNotification();
+			return n;
+		}
+		if(mode.equalsIgnoreCase("email")) {
+			Notification n = new EmailNotification();
+		}
+		return null;
+	}
+}
+
+
+public class FactoryDesignPatternMainClass {
+	public static void main(String[] args) {
+		Factory f = new Factory();
+		Notification n = f.createNotification("sms");
+		n.notifi();
+	}
+}
+
+----------------------------
+--3)Chain of Responsibility  : JVM by default follows this design pattern
+----------------------------
+Sender 
+   │
+   ▼
++-----------+     +-----------+     +-----------+     +-----------+
+| Handler 1 | ───►| Handler 2 | ───►| Handler 3 | ───►| Handler 4 |
++-----------+     +-----------+     +-----------+     +-----------+
+      │                 │                 │                 │
+      ├── handles? ⇒ YES│                 │                 │
+      │                 ├── handles? ⇒ YES│                 │
+      │                 │                 ├── handles? ⇒ YES│
+      │                 │                 │                 ├── handles? ⇒ YES
+      ▼                 ▼                 ▼                 ▼
+ Receiver          Receiver          Receiver          Receiver
+
+-Chain of Responsibility is a design pattern consisting of a source of command objects and a series of processing objects.
+-Chain of Responsibility is a behavioral design pattern where a request (command) is sent from a source and travels through a chain of processing objects, where each object can handle the request or pass it to the next one.
+-The Chain of Responsibility is a behavioral design pattern that lets you pass a request along a chain of handlers.Each handler decides either to process the request or pass it to the next handler in the chain.
+There is a source of the request (client).
+-There is a chain of handlers (processing objects).
+Each handler either:
+✔ processes the request
+✔ OR passes it forward
+This removes tight coupling between sender and receiver.
+--How JVM will handle Exception:--> 
+  class ChainOfResponsibility{
+    main(){
+	 m1();
+	 }
+	 static void m1(){
+	 m2();
+	 }
+	 static void m2(){
+	 m3();
+	 }
+	 static void m3(){
+	  int c = 10/0;
+	  }
+   }
+      --Once an exception occurs in m3(), the JVM creates an ArithmeticException object.JVM checks if m3() handles the exception. If not, it checks the caller m2().
+        If still not handled, it checks m1(), then main().If nobody handles it, the JVM’s default exception handler prints the stack trace and terminates the program.
+		
+Stack Trace (Bottom → Top of stack):
+main()  ◄── m1() ◄── m2() ◄── m3()  ◄── Exception created here
+
+What problem this design pattern solves:-->
+            -Coupling the sender of request to its receiver should be avoided
+			-It should be possible that more than one receiver can handle the request
+			-In Java world, we benefit from chain of Responsibility every day, one classic example is Servelet Filters in Java that allows multiple filters to process an HTTP Request. Though in that case, each flter
+			invoke the chain instead of the next filter.
+			  public class CustomFilter(ServeletRequest request, ServeletResponse response,Filterchain chain) throws IoException, ServeletException{
+			       //Process the request
+				   //Pass the request(i.e command) along the fileter chain
+				   chain.doFilter(request,response);
+				 }
+				}
+			-If credentials are correct, transfer request to corresponding controller. We can have multiple filters, once first filter executed successfully, we can add another(Request from one filter
+			comes to other filter, ex-->Bank customer and Employee)
+			-Multiple filters form a chain. If each filter validates successfully, the request moves to the next filter. When all filters approve, the request is finally routed to the correct controller.
+Client Request
+      │
+      ▼
++----------------+     +----------------+     +----------------+     +-----------------+
+| Auth Filter    | ───►| Role Filter    | ───►| Routing Filter | ───►|  Controller     |             =====>Chaining(Delegation) ie Request sent from one object to other
+| (Check login)  |     | (Emp/Customer) |     | (Find correct  |     |  (Final target) |
++----------------+     +----------------+     |  controller)   |     +-----------------+
+      │                  │                      +----------------+
+      │                  │
+      │                  └── passes request if role matches
+      │
+      └── passes request only if credentials are valid
