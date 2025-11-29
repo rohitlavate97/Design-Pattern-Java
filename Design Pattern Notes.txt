@@ -858,3 +858,132 @@ public class Client {
     }
 }
 --------------------------------------
+--Builder Design Pattern:  --> also in spring @Builder
+--------------------------------------
+-The builder design pattern designed to provide a flexible solution to various object creation problems in OOPs. The intent of the builder design pattern is to seperate the construction of a complex object 
+from its representation.
+-It is used to construct a complex object step by step and the final step will return the object. The process of constructing an object should be generic so that it can be used to create different representations
+of the same object.
+-Thus, there are two specific problems that we need to solve-->Too many Constructor arguments
+                                                            -->Incorrect object state
+	Advantages of Builder Desing Pattern:
+	 -The parameter to the constructor are reduced and are provided in highly readable method calls
+	 -Builder design pattern also helps in minimizing the number of parameter in the constructor and thus there is no need to pass in null for optional parameters to the constructor
+	 -Object is always instantiated in a complete state
+	 -Immutable objects can be built without much complex logic in the object building process
+-All implementations of java.lang.Appendable are infact good example of use of Builder pattern in Java 
+e.g java.lang.StringBuilder # append() --> (Unsynchronized Class)
+    java.lang.StringBuffer # append() -->(Synchronized Class)
+	java.nio.ByteBuffer # put() --> (also on CharBuffer, ShortBuffer, IntBuffer, LongBuffer, FloatBuffer, DoubleBuffer)
+	
+	StringBuilder builder = new StringBuilder("Temp");
+	String data = builder.append(1)
+	         .append(true)
+			 .append("friend")        //making object mutable
+			 .toString();
+    -Seperate the constructor of complex object from its representation. so that the same constructor process can be different representations(Same process, different results" - Use identical steps to create different versions of an object.) 
+	 e.g-->Same recipe (construction process).Can make different cakes (representations) - chocolate, vanilla, strawberry.Recipe steps don't change, but the final cake does
+	-The Builder pattern allows us to write readable, understandable code to set up complex object
+-When to use Builder Design Pattern:- If you find yourself in a situation where you keep on adding new parameter to a constructor, resulting in  code that becomes error-prone and hard to read, perhaps it's good time to take
+              a step back and consider refactoring your code to use a builder
+			 -Look at the User class and UserBuilder class which we created in the class to implement bulder design pattern. User class can have many user attributes, like first name, last name, email, mobile, address. 
+			  And in future, we can have more. If we create the constructor with these fields, if the field is optional then we have to pass 'null', and every time we should be conscious while creating object, 
+			  we may pass address in place of email if we mistaken.
+             -To avoid all these issues instead of calling the constructor, we can create the method and call these methods to create the object. So complex object can be easily developed with the approach.
+             -We created User Builder inner class and added all the attributes using the methods and created User Object	
+
+App:
+----
+
+        +---------------------+
+        |       User          |
+        +---------------------+
+        | - String firstName  |
+        | - String lastName   |
+        | - int age           |
+        | - long mobile       |
+        +---------------------+
+        |  User(UserBuilder)  |
+        +---------------------+
+                  ^
+                  |
+        +----------------------+
+        |    UserBuilder       |
+        +----------------------+
+        | + firstName          |
+        | + lastName           |
+        | + age                |
+        | + mobile             |
+        +----------------------+
+        | + age()              |
+        | + mobile()           |
+        | + build()            |
+        +----------------------+
+
+
+public class User {
+	User(UserBuilder ub){
+		this.firstName = ub.firstName;
+		this.lastName = ub.lastName;
+		this.age = ub.age;
+		this.mobile = ub.mobile;
+	} 
+	
+	final private String firstName;    //Mandatory field      //if made final, they can be immutable
+	final private String lastName;     //Mandatory field
+	final private int age;             //Optional Field
+	final private long mobile;         //Optional Field
+	@Override
+	public String toString() {
+		return "User [firstName=" + firstName + ", lastName=" + lastName + ", age=" + age + ", mobile=" + mobile + "]";
+	}
+}	
+
+
+public class UserBuilder {
+	String firstName;
+	String lastName;
+	int age;
+	long mobile;
+	
+	public UserBuilder(String firstName,String lastName) {
+		this.firstName = firstName;
+		this.lastName = lastName;
+	}
+	
+	//creating method for optional parameter
+	public UserBuilder age(int age) {
+		this.age = age;
+		return this;
+	}
+	
+	public UserBuilder mobile(long mobile) {
+		this.mobile = mobile;
+		return this;
+	}
+	
+	User build() {
+		User u = new User(this);     //In order to create outer class object
+		return u;
+	}
+}
+
+
+public class Client {
+
+	public static void main(String[] args) {
+
+		User user = new UserBuilder("Rohit", "Lavate")
+				.age(28)
+				.mobile(9876543210L)
+				.build();
+
+		System.out.println(user);
+	}
+
+}
+----------------------------------------		 
+
+------------------------
+-Decoder Design Pattern:-->
+------------------------
