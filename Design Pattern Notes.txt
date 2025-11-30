@@ -1387,4 +1387,203 @@ public class MainClass {
 ✔ You access them via an iterator object
 ✔ Encourages loose coupling and clean traversal logic
 -Collections are one of the most datatypes in programming. Nonetheless, a collection is  just a container for a group of objects
--
+-Most collections store their elements in simple lists. However, some of them are based on stacks, tree, graphs and other complex data structure.
+-But no matter how a collection is structured, it must provide some way of accessing its elements. There should be a way to go through each elements.There should be a way
+ to go through each elements of the collection without accessing the same elements over and over.
+-The main Idea of the Iterator pattern is to extract the traversal behavior of a collection into a seperate object called an iterator
+-In addition to implementing the algorithm itself, an iterator object encapsulates all of the traversal details, such as the current position and how many elements are left 
+ till end. Because of this, several iterators can go through the same collection at the same time, independently of each other
+-Usually, iterators provide one primary method for fetching elements of the collection. The client can keep running this method until it doesn't return anything. which means
+ that the iterator has transmitted all of the elements
+
+--Iterable<T> interface --> contains Iterator<T> iterator() -->abstract method (Collection is child interface of Iterable)
+  Iterator --> interface in Java --> boolean hasNext();
+
+
+public class MainClass {
+    public static void main(String[] args) {
+
+        List<Integer> list = new ArrayList<>();
+        list.add(10);
+        list.add(20);
+        list.add(30);
+        list.add(40);
+
+        Iterator<Integer> it = list.iterator();         //When we add element internally Java is using variable modcount   ex--->modCount != expectedModCount (In ArrayList class)
+
+        while (it.hasNext()) {
+            Integer value = it.next();                  //If we comment this line, it will cause infinite loop
+            l.add(10);                                  //java.util.ConcurrentModificationException
+        }
+    }
+}
+
+-Whenever you iterating over a collection and doing some structural modification and then performing next or previous operation then -->ConcurrentModificationException
+-Change to: List<Integer> l = new CopyOnWriteArrayList();    //CopyOnWriteArrayList implements List interface  -->Not using modCount concept            ❌ Not good for heavy write operations (because it copies entire array each time)
+            //Here we see variable of snapshot, ie Object array -->CopyOnWriteArrayList creates a snapshot copy of the underlying array at that moment.
+			  So: The iterator reads from the snapshot (old data)
+			  Meanwhile you can modify the actual list (new data) 
+			  The iterator never sees those changes → safe iteration
+-Iterator:->Addition or removal that should not happen on the object that you are iterating. Iterator is internally using seperate object and whatever add or remove performing
+            happen on seperate object
+		  ->CopyOnWriteArrayList<>() --> we don't get ConcurrentModificationException, internally uses deep cloning
+		    If Employee class have dept object, shallow copy will point to object also, when changes done it will affect that object too.
+			However, we are following deep copy--> Only original collection getting deleted, not snapshot. so when you change original object clone doesn't change
+-checkForModification() --> This method is present in collections, which gives ConcurrentModificationException
+
+public Iterator<E> iterator() {
+    return new Itr();
+}
+
+private class Itr implements Iterator<E> {
+    int cursor;       
+    int lastRet = -1;
+    int expectedModCount = modCount;
+
+    public boolean hasNext() {
+        return cursor != size;
+    }
+
+    public E next() {
+        checkForComodification();
+        int i = cursor;
+        if (i >= size)
+            throw new NoSuchElementException();
+        cursor = i + 1;
+        return elementData[i];
+    }
+
+    final void checkForComodification() {
+        if (modCount != expectedModCount)
+            throw new ConcurrentModificationException();
+    }
+}
+
+
+| Concept                 | ArrayList                  | CopyOnWriteArrayList |
+| ----------------------- | -------------------------- | -------------------- |
+| Method used             | `checkForComodification()` | ❌ No such method    |
+| Iterator type           | Fail-fast                  | Fail-safe            |
+| Uses modCount           | ✔ Yes                     | ❌ No                |
+| Modify during iteration | ❌ Throws                  | ✔ Safe              |
+
+-HashSet<>() : --> Also gets ConcurrentModificationException --> For that we use CopyOnWriteArraySet (HashSet internally uses HashMap)
+-To make ArrayList sychronized --> synchronizedList()                      //locks entire list
+   List<Integer> list = Collections.synchronizedList(new ArrayList<>());
+   
+🚨 Important Note:
+Even with synchronizedList, you must manually synchronize while iterating:
+
+List<Integer> list = Collections.synchronizedList(new ArrayList<>());
+synchronized(list) {
+    for (Integer i : list) {
+        System.out.println(i);
+    }
+}
+Because iterator still uses modCount → still fail-fast.
+✔ It only synchronizes add(), remove(), get() etc.
+❌ It does NOT create a thread-safe iterator.
+
+| Collection       | Fail-Fast?     | Thread-Safe?  | Alternative                           |
+| ---------------- | -------------- | ------------- | ------------------------------------- |
+| ArrayList        | Yes            | No            | CopyOnWriteArrayList                  |
+| HashSet          | Yes            | No            | CopyOnWriteArraySet                   |
+| LinkedList       | Yes            | No            | BlockingQueue / ConcurrentLinkedQueue |
+| HashMap          | Yes            | No            | ConcurrentHashMap                     |
+| ArrayList + sync | Yes (iterator) | Yes (methods) | Use synchronized(list) block          |
+
+| Feature     | `synchronizedList()` | `CopyOnWriteArrayList`            |
+| ----------- | -------------------- | --------------------------------- |
+| Locking     | Yes, entire list     | No lock for iteration             |
+| Iterator    | Fail-fast            | Fail-safe                         |
+| Performance | Slower (coarse lock) | Faster on reads, slower on writes |
+| Use case    | Write-heavy          | Read-heavy                        |
+
+App:
+---
+public class InsurancePolicy {
+	private String policyNumber;
+	private String policyHolderName;
+	private String policyType;
+	private Double policyAmount;
+	
+	public InsurancePolicy(String policyNumber, String policyHolderName, String policyType, Double policyAmount) {
+		super();
+		this.policyNumber = policyNumber;
+		this.policyHolderName = policyHolderName;
+		this.policyType = policyType;
+		this.policyAmount = policyAmount;
+	}
+	//getter and setter
+}
+
+
+public class InsurancePolicyCollection implements Iterable<InsurancePolicy>{
+	private List<InsurancePolicy> policyList;
+	public InsurancePolicyCollection() {
+		policyList = new ArrayList<>();
+	}
+	
+	public void addPolicy(InsurancePolicy policy) {
+		policyList.add(policy);
+	}
+	
+	public void removePolicy(InsurancePolicy policy) {
+		policyList.remove(policy);
+	}
+	
+	@Override
+	public Iterator<InsurancePolicy> iterator() {
+		// TODO Auto-generated method stub
+		return new PolicyIterator(policyList);
+	}
+
+}
+
+
+
+public class PolicyIterator implements Iterator<InsurancePolicy> {
+	private int currentIndex = 0;
+	private List<InsurancePolicy> policyList;
+
+	public PolicyIterator(List<InsurancePolicy> policyList) {
+		this.policyList = policyList; // important fix
+	}
+
+	@Override
+	public boolean hasNext() {
+		return currentIndex < policyList.size();
+	}
+
+	@Override
+	public InsurancePolicy next() {
+		if (!hasNext()) {
+			return null;
+		}
+		return policyList.get(currentIndex++);
+	}
+}
+
+
+
+public class IteratorMainClass {
+
+	public static void main(String[] args) {
+		InsurancePolicyCollection policyCollection = new InsurancePolicyCollection();
+		policyCollection.addPolicy(new InsurancePolicy("1001","John Smith","Life",1000.00));
+		policyCollection.addPolicy(new InsurancePolicy("1002","John Doe","Critical",700.00));
+		policyCollection.addPolicy(new InsurancePolicy("1003","Dwayne Smith","Medical",1500.00));
+		
+		Iterator<InsurancePolicy> policyIterator = policyCollection.iterator();
+		while(policyIterator.hasNext()) {
+			InsurancePolicy policy = policyIterator.next();
+			System.out.println("Policy Number: "+policy.getPolicyNumber());
+			System.out.println("Policy Holder Name: "+policy.getPolicyHolderName());
+			System.out.println("Policy Type: "+policy.getPolicyType());
+			System.out.println("Policy Amount: "+policy.getPolicyAmount());
+			System.out.println("------------------------------------------------");
+		}
+	}
+
+}
+------------------------------------------------------------
