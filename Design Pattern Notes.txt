@@ -1004,6 +1004,8 @@ public class Client {
 			->Create an abstract decorator class implementing the above same interface -->This step corresponds to coffee Decorator abstract class in our example
 			->Create a concrete decorator class extending the above abstract decoretor class -->This step corresponds to with Milk and with Water classes in our example
 			
+Individual object of class can be modified dynamically without disturbing existing objects of same class
+			
 Coffee App:
 ----------
 public interface Coffee {
@@ -1203,4 +1205,186 @@ public class DecoratorMainClass {
 
 }
 ----------------------------------------------------------------------
-    
+------------------------
+-Adapter Design Pattern:->
+------------------------
+┌─────────────┐     ┌───────────┐     ┌──────────────────────────┐     ┌───────────┐     ┌─────────────┐
+│  Process 1  │ ──► │ Output A  │ ──► │ Adapter (A → B Converter)│ ──► │ Output B  │ ──► │  Process 2  │
+└─────────────┘     └───────────┘     └──────────────────────────┘     └───────────┘     └─────────────┘
+
+-Adapter design pattern is a structural software pattern that allows the interface of an existing class to be used as another interface that the client expects.
+-It is used to make existing classes work with other classes without modifying their source code, by converting one interface into another
+-The Adapter design pattern is a structural design pattern that allows two unrelated/uncommon interface to work together. In other words, the adapter design pattern
+ makes two incompatible interfaces compatible without changing their existing code.
+-Adapter patterns use a single class(i.e Adapter Class) to join functionalities of independent or incompatible interfaces/Classes
+-The Adapter pattern is a structural design pattern that acts as a bridge between two interfaces that are incompatible. The term
+ 'Adapter' is used to represent an object that enables two mutually incompatible interfaces to communicate and collaborate
+-In essence, the adapter design pattern enables classes that have incompatible interfaces to work together and their object communicate,if need to be
+-For Implementation, please look at example that we discussed in the class of implementing different payment gateway in insurance app from Billdesk to PayTm
+
+Client (Checkout Page)
+        │
+        ▼
+PaymentGateway Interface (Target)
+        │
+        ▼
+PaymentAdapter (converts unified request → provider specific format)
+        │
+        ├──► StripeAdapter → Stripe API
+        ├──► PayPalAdapter → PayPal API
+        └──► RazorpayAdapter → Razorpay API
+        ▼
+Payment Response → back to Client
+
+┌──────────────┐     ┌────────────────────┐     ┌──────────────┐
+│   Project     │ ──►│  BillDesk Output   │ ──► │   BillDesk   │    //Earlier we used BillDesk platform, but later we decided to implement Paytm
+└──────────────┘     └────────────────────┘     └──────────────┘
+
+┌──────────────┐     ┌────────────────────┐     ┌──────────────┐
+│   Project     │ ──►│  BillDesk Output   │ ──► │      Paytm   │    //Problem-->Feeding Billdesk output to Paytm, causes issue
+└──────────────┘     └────────────────────┘     └──────────────┘
+
+┌──────────────┐     ┌────────────────────┐     ┌─────────────────────────────┐           ┌──────────────┐
+│   Project    │ ──► │   BillDesk Output  │ ──► │ Adapter (convertBilldeskIntoPaytm) ──►  │    Paytm     │
+└──────────────┘     └────────────────────┘     └─────────────────────────────┘           └──────────────┘
+BilldeskToPaytmAdapter {
+     PaytmRequest convertBilldeskIntoPaytm(BilldeskRequest req)
+}
+
+-Example of Implementations of Adapter Design Pattern:- Some other example worth noticing is as below
+              1) java.util.Arrays.asList() 
+			  -->Example of the Adapter design pattern in JDK is the InputStreamReader class, which is an adapter between InputStream class and the Reader class
+			     The InputStream class is used to read data from a stream of byte whild the Reader class is used to read data from a character stream. However, 
+				 sometimes we need to read data from an InputStream as characters, which is where InputStreamReader adapter comes in.
+				 The InputStreamReader class takes an InputStream object in its constructor and provides the necessary implementation to read data from the stream characters.
+				 It uses character encoding to convert the bytes from the stream into characters that can be read by the Reader class
+				 Here's example of how the InputStreamReader adapter class can be used:
+				 
+import java.io.*;
+public class InputStreamReaderExample {
+    public static void main(String[] args) {
+        try {
+            // byte stream source (InputStream)
+            InputStream is = new FileInputStream("data.txt");
+
+            // Adapter converts byte stream → character stream
+            Reader reader = new InputStreamReader(is);
+
+            char[] buffer = new char[1024];
+            int numCharReads = 0;
+
+            while ((numCharReads = reader.read(buffer)) > 0) {
+                String data = new String(buffer, 0, numCharReads); 
+                System.out.print(data);
+            }
+
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+                -In the example, an InputStream object is created and initiated with data from a file. Then an InputStreamReader object is created using the InputStream object.
+				The read method of the InputStreamReader is used to read characters from the stream into a buffer. Finally, the data is converted into a String and printed to
+				the console.
+				   This example demonstrate how the InputStreamReader adpter class allows us to read data from an InputStream as characters, which can be very useful when dealing
+				with text data
+App:
+---
+public interface BillDesk {
+	void setPaymentType(String paymentType);
+	String getPaymentType();
+	void setDetails(String data);
+	String getDetails();
+}
+
+public interface PayTM {
+	void setTypeOfPayment(String paymentType);
+	String getTypeOfPayment();
+	void provideDetails(String data);
+	String getDetails();
+}
+
+public class CompanyPortal implements BillDesk{
+	String paymentType;
+	String data;
+	@Override
+	public void setPaymentType(String paymentType) {
+		this.paymentType = paymentType;
+	}
+
+	@Override
+	public String getPaymentType() {
+		return paymentType;
+	}
+
+	@Override
+	public void setDetails(String data) {
+		this.data = data;
+	}
+
+	@Override
+	public String getDetails() {
+		return data;
+	}
+
+}
+
+public class PayTmImpl implements PayTM{
+	String paymentType;
+	String data;
+	@Override
+	public void setTypeOfPayment(String paymentType) {
+		this.paymentType = paymentType;
+	}
+
+	@Override
+	public String getTypeOfPayment() {
+		return paymentType;
+	}
+
+	@Override
+	public void provideDetails(String data) {
+		this.data = data;
+	}
+
+	@Override
+	public String getDetails() {
+		return data;
+	}
+}
+
+
+public class PaymentAdapter {
+
+    public static PayTM convertBillDeskToPayTM(BillDesk billDesk) {
+        PayTmImpl paytm = new PayTmImpl();
+        paytm.setTypeOfPayment(billDesk.getPaymentType());
+        paytm.provideDetails(billDesk.getDetails());
+        return paytm;
+    }
+}
+
+public class MainClass {
+
+	public static void main(String[] args) {
+		CompanyPortal cp = new CompanyPortal();
+		cp.setPaymentType("UPI");
+		cp.setDetails("9097808783@apl");
+		
+		PayTM tm = PaymentAdapter.convertBillDeskToPayTM(cp);
+		System.out.println("PayTM Payment Type: "+tm.getTypeOfPayment());
+		System.out.println("PayTM Payment Details: "+tm.getDetails());
+	}
+
+}
+-----------------------------------------------------
+--------------------------
+--Iterator Design Pattern:
+--------------------------
+-The Iterator Design Pattern provides a standard way to access elements of a collection sequentially without exposing the internal structure of the collection.
+✔ You don't need to know how elements are stored
+✔ You access them via an iterator object
+✔ Encourages loose coupling and clean traversal logic
+-Collections are one of the most datatypes in programming. Nonetheless, a collection is  just a container for a group of objects
+-
