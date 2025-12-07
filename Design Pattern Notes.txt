@@ -1587,3 +1587,161 @@ public class IteratorMainClass {
 
 }
 ------------------------------------------------------------
+
+--------------------------
+-Observer Design Pattern:
+--------------------------
+-It is behavioral design pattern. It specifies communication between objects, Observable and Observers. An observable is an object which notify observers about the change in its state.
+-The observer pattern is software design pattern in which an object named the subject, maintains a list of its dependents, called observeres, and notifies them automatically of any state changes,
+ usually by calling one of their methods
+-It is mainly used for implementing distributed event handling systems
+-In simple words, if we take the example of twitter. If 100 users are following Modi, then when any tweet is added by modi, then this tweet notification will be sent to 100 users.
+-For small scale applications, if we want to implement the event driven mechanism, then we should go for observer design pattern.
+-Look at the example that we have added, created the class for Insurance company and added LIC and TATA as objectts created User class and created some 4 users(karthik,ashok etc). Whoever interested 
+ for LIC or taken policy with LIC, we added them as subscribers so for this added the method in Insurance company class like(Added subscriber, remove subscriber, notify subscriber etc)
+   Added one more method in Insurance class called Tweet, so when LIC tweets this method gets invoked and under this we can Notify Subscriber. Here when ever LIC or TATA announces something 
+ then all the subscribers will be notified
+ 
++----------------------------------+        +----------------------------------------+
+|        InsuranceCompany          |<>------|        LIC / TATA (ConcreteSubject)    |
++----------------------------------+        +----------------------------------------+
+| - subscribers: List<User>        |        | - companyName                           |
++----------------------------------+        +----------------------------------------+
+| + addSubscriber(User)            |        | + getCompanyName()                      |
+| + removeSubscriber(User)         |        | + tweet(message)                        |
+| + notifySubscribers(message)     |        +----------------------------------------+
++----------------------------------+
+
+                     | implements
+                     v
+
++----------------------------------+        +----------------------------------------+
+|              User                |<-------|      ConcreteUser (Observer)           |
++----------------------------------+        +----------------------------------------+
+| + update(message)                |        | - userName                              |
++----------------------------------+        | + update(message)                       |
+                                            +----------------------------------------+
+
+ 
+Benifit: It describes the coupling between the objects and the observer.
+         It provides the support for broadcast_type communication
+		 
+Usage: When the change of a state in one object must be reflected in another object without keeping the objects tightly coupled
+       When the framework we writes and needs to be enhanced in future with new observer with minimal changes.
+	   
+Examples: In core Java
+          -java.util.Observer/java.util.observable(Rarely used in Real world)
+		  -All implementations of java.util.EventListner(Practically all over swing component)
+		  -javax.servelet.http.HttpSessionBindingListener -->Gets notified when an object is added to or removed from an HTTP session.
+		  -javax.faces.event.PhaseListner
+		  
++---------------------+        +----------------------+
+|       Subject       |<>------|   ConcreteSubject    |
++---------------------+        +----------------------+
+| - observers: List   |        | - state              |
++---------------------+        +----------------------+
+| + attach(obs)       |        | + getState()         |
+| + detach(obs)       |        | + setState(state)    |
+| + notifyObservers() |        +----------------------+
++---------------------+
+
+             | implements
+             v
+
++---------------------+        +-----------------------+
+|      Observer       |<-------|   ConcreteObserver    |
++---------------------+        +-----------------------+
+| + update()          |        | - observerState       |
++---------------------+        | + update()            |
+                               +-----------------------+
+
+public interface NotifyCustomerInterface {
+	void notification(String tweet);
+}
+
+
+public class Customer implements NotifyCustomerInterface{
+	String name;
+	Customer(String name){
+		this.name = name;
+	}
+
+	@Override
+	public void notification(String tweet) {
+		System.out.println(name+" has notification received: "+tweet);
+	}
+
+}
+
+
+public interface ManageSubscriberAndNotifi {
+	public void addSubscriber(NotifyCustomerInterface n);
+	public void removeSubscriber(NotifyCustomerInterface n);
+	public void notifyAllSubscribers(String tweet);
+}
+
+
+public class InsuranceCompany  implements ManageSubscriberAndNotifi{
+	String name;
+	InsuranceCompany(String name){
+		this.name = name;
+	}
+	
+	List<NotifyCustomerInterface> subscriberList = new ArrayList<>();
+	
+	@Override
+	public void addSubscriber(NotifyCustomerInterface n) {
+		subscriberList.add(n);
+		
+	}
+
+	@Override
+	public void removeSubscriber(NotifyCustomerInterface n) {
+		subscriberList.remove(n);
+		
+	}
+
+	@Override
+	public void notifyAllSubscribers(String tweet) {
+		subscriberList.forEach(f -> f.notification(tweet));
+		
+	}
+	
+	public void tweet(String tweet) {
+		notifyAllSubscribers(tweet);
+	}
+	
+}
+
+
+public class ObserverMainClass {
+
+	public static void main(String[] args) {
+		Customer karthik = new Customer("Karthik");
+		Customer sachin = new Customer("Sachin");
+		Customer ramesh = new Customer("Ramesh");
+		Customer yash = new Customer("Yash");
+		Customer tinku = new Customer("Tinku");
+		
+		InsuranceCompany LIC = new InsuranceCompany("LIC");
+		InsuranceCompany TATA = new InsuranceCompany("TATA");
+		
+		LIC.addSubscriber(karthik);
+		LIC.addSubscriber(sachin);
+		
+		TATA.addSubscriber(yash);
+		TATA.addSubscriber(tinku);
+		TATA.addSubscriber(ramesh);
+		
+		LIC.tweet("Hi, Everyone --> New policy called Jeevan anand launched");
+		TATA.tweet("Hi, TATA website is down...");
+		
+
+	}
+
+}
+-------------------------------------------------------------
+
+-------------------------
+-Strategy Design Pattern:
+-------------------------
